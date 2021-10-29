@@ -1,0 +1,109 @@
+%To write domain dependant theory
+%and integrity constraints + goal
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%------DD------%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%initiates(e,f,t) :- BODY describes what fluent f event e makes true at time t
+%			  given description BODY
+%terminates(e,f,t) :- BODY describes what fluent f is set to false when event e 
+%			   occurs at time t, given description BODY
+%initially(f) describes which fluents are true at the start
+
+%static facts:
+place(house)
+place(car)
+
+%initially we have
+%	agent in house
+%	camera in car
+%	camera switched off
+
+initially(agentLocation(house))
+initially(cameraLocation(car))
+initially(cameraStatus(off))
+
+%describe agent taking picture
+initiates(takePhoto,photoTaken(Place),T) :-
+	time(T),
+	holds(holdCamera, T),
+	holds(agentLocation(Place,T).
+
+%describe agent turning on camera
+initiates(turnOn,cameraStatus(on),T) :-
+	time(T),
+	holds(holdCamera,T),
+	holds(cameraStatus(off),T).
+
+terminates(turnOn,cameraStatus(off),T) :-
+	time(T),
+	holds(holdCamera,T),
+	holds(cameraStatus(off),T).
+
+%describe picking up camera
+initiate(pickUp,holdCamera,T) :-
+	time(T),
+	holds(not holdCamera,T),
+	holds(agentLocation(Place1),T),
+	holds(cameraLocation(Place2),T),
+	Place1 == Place2.
+
+%describe agent moving location
+initiates(go(P1,P2),agentLocation(P2),T) :-
+	place(P1),
+	place(P2),
+	P1 =/= P2,
+	time(T).					
+
+terminates(go(P1,P2),agentLocation(P1),T) :-
+	place(P1),
+	place(P2),
+	P1 =/= P2,
+	time(T).					
+
+%describe putting down camera
+initiate(putDown, not holdCamera,T) :-
+	time(T),
+	holdAt(holdCamera, T).
+
+%describe agent turning off camera
+initiates(turnOff,cameraStatus(off),T) :-
+	time(T),
+	holds(holdCamera,T),
+	holds(cameraStatus(on),T).
+
+terminates(turnOff,cameraStatus(on),T) :-
+	time(T),
+	holds(holdCamera,T),
+	holds(cameraStatus(on),T).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%------DD------%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%------ic------%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%only one event can happen at a given time
+ic :- happens(E1,T), happens(E2,T), time(T), E1 =/= E2.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%------ic------%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%------A------%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+abducible(happens(_,_)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%------A------%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%------G------%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Goal: take photo of house
+holds(photoTaken(house),_)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%------G------%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%possible plan
+happens(go(house,car),1).
+happens(pickUp,2).
+happens(turnOn,3).
+happens(go(car,house),4).
+happens(takePhoto,5).
